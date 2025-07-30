@@ -1,18 +1,28 @@
 import { create } from "zustand";
+import { WebSocketMessage } from "../hooks/useWebSocket";
 
 type State = {
-  image: string | null;
+  data: Pick<WebSocketMessage, "image" | "timestamp">;
 };
 
 type Actions = {
-  setImage: (image: string) => void;
+  setImageData: (data: Pick<WebSocketMessage, "image" | "timestamp">) => void;
 };
 
 type Store = State & Actions;
 
 const useImageDataStore = create<Store>((set) => ({
-  image: null,
-  setImage: (image: string) => set({ image }),
+  data: {
+    image: "",
+    timestamp: 0,
+  },
+  setImageData: (data) =>
+    set((state) => ({
+      data: {
+        ...state.data,
+        ...data,
+      },
+    })),
 }));
 
 export default useImageDataStore;

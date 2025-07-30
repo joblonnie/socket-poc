@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import useImageDataStore from "../store/useImageDataStore";
 
-interface WebSocketMessage {
+export interface WebSocketMessage {
   agentIp: string;
   cameraId: number;
   currentTime: number;
@@ -21,7 +21,7 @@ export const useWebSocketReceiver = (url: string) => {
   const socketRef = useRef<WebSocket | null>(null);
   const lastMessageRef = useRef<string | null>(null);
 
-  const setImage = useImageDataStore((state) => state.setImage);
+  const setImageData = useImageDataStore((state) => state.setImageData);
 
   useEffect(() => {
     const socket = new WebSocket(url);
@@ -35,7 +35,10 @@ export const useWebSocketReceiver = (url: string) => {
       const message: WebSocketMessage = JSON.parse(e.data);
 
       lastMessageRef.current = message.image;
-      setImage(message.image);
+      setImageData({
+        image: message.image,
+        timestamp: message.timestamp,
+      });
     };
 
     socket.onerror = (error) => {

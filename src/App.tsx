@@ -1,25 +1,9 @@
 import { useWebSocketReceiver } from "./hooks/useWebSocket";
 import useImageDataStore from "./store/useImageDataStore";
-import CommonImageRenderer from "./components/renderer/CommonImageRenderer";
-import dayjs from "dayjs";
-
-const simpleRenderMethod = (
-  base64: string,
-  onLoad: (img: HTMLImageElement, renderTime: number) => void
-) => {
-  const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    onLoad(e.currentTarget, dayjs().valueOf());
-  };
-
-  return (
-    <img
-      src={`data:image/jpeg;base64,${base64}`}
-      alt="WebSocket Stream"
-      style={{ width: "300px", height: "auto" }}
-      onLoad={handleLoad}
-    />
-  );
-};
+import PureBase64ImageRenderer from "./components/test-case/PureBase64ImageRenderer";
+import ObjectURLImageRenderer from "./components/test-case/ObjectURLImageRenderer";
+import CanvasBase64ImageRenderer from "./components/test-case/CanvasBase64ImageRenderer";
+import CanvasObjectURLImageRenderer from "./components/test-case/CanvasObjectURLImageRenderer";
 
 function App() {
   useWebSocketReceiver(import.meta.env.VITE_WS_URL);
@@ -27,12 +11,38 @@ function App() {
   const imageData = useImageDataStore((state) => state.data);
 
   return (
-    <div>
+    <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
       {imageData && (
-        <CommonImageRenderer
-          imageData={imageData}
-          renderMethod={simpleRenderMethod}
-        />
+        <>
+          <PureBase64ImageRenderer
+            imageData={{
+              image: imageData.image,
+              timestamp: imageData.timestamp,
+              receiveTime: imageData.receiveTime,
+            }}
+          />
+          <ObjectURLImageRenderer
+            imageData={{
+              image: imageData.image,
+              timestamp: imageData.timestamp,
+              receiveTime: imageData.receiveTime,
+            }}
+          />
+          <CanvasBase64ImageRenderer
+            imageData={{
+              image: imageData.image,
+              timestamp: imageData.timestamp,
+              receiveTime: imageData.receiveTime,
+            }}
+          />
+          <CanvasObjectURLImageRenderer
+            imageData={{
+              image: imageData.image,
+              timestamp: imageData.timestamp,
+              receiveTime: imageData.receiveTime,
+            }}
+          />
+        </>
       )}
     </div>
   );

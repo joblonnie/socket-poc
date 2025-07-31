@@ -1,4 +1,4 @@
-import ImageRendererView from "../ImageRendererView";
+import ImageRendererView from "../ui/ImageRendererView";
 import { WebSocketMessage } from "../../hooks/useWebSocket";
 import { useResolution } from "../../hooks/useResolution";
 import { useFrameStats } from "../../hooks/useFrameStats";
@@ -7,6 +7,7 @@ import { useLatencyCalculator } from "../../hooks/useLatencyCalculator";
 import { useElapsedTime } from "../../hooks/useElaspsedTime";
 
 type Props = {
+  title: string;
   imageData: Pick<WebSocketMessage, "image" | "timestamp"> & {
     receiveTime: number;
   };
@@ -16,7 +17,7 @@ type Props = {
   ) => React.ReactNode;
 };
 
-const CommonImageRenderer = ({ imageData, renderMethod }: Props) => {
+const CommonImageRenderer = ({ title, imageData, renderMethod }: Props) => {
   const { resolution, updateResolution } = useResolution();
 
   const { latencySec, calculateLatency } = useLatencyCalculator();
@@ -35,7 +36,7 @@ const CommonImageRenderer = ({ imageData, renderMethod }: Props) => {
 
   return (
     <ImageRendererView
-      title="WebSocket Image Stream"
+      title={title}
       renderItem={renderMethod(imageData.image, handleLoad)}
       metrics={[
         {
@@ -70,12 +71,12 @@ const CommonImageRenderer = ({ imageData, renderMethod }: Props) => {
           description: "전체 프레임 대비 누락된 프레임의 비율입니다.",
         },
 
-        {
-          label: "Latency",
-          value: latencySec ?? 0,
-          unit: " s",
-          description: "서버에서 받은 시점부터 렌더링까지의 지연 시간입니다.",
-        },
+        // {
+        //   label: "Latency",
+        //   value: latencySec ?? 0,
+        //   unit: " s",
+        //   description: "서버에서 받은 시점부터 렌더링까지의 지연 시간입니다.",
+        // },
         {
           label: "Memory Usage",
           value: memoryUsage?.used ?? 0,

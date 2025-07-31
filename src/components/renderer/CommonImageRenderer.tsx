@@ -4,6 +4,7 @@ import { useResolution } from "../../hooks/useResolution";
 import { useFrameStats } from "../../hooks/useFrameStats";
 import { useMemoryUsage } from "../../hooks/useMemoryUsage";
 import { useLatencyCalculator } from "../../hooks/useLatencyCalculator";
+import { useElapsedTime } from "../../hooks/useElaspsedTime";
 
 type Props = {
   imageData: Pick<WebSocketMessage, "image" | "timestamp"> & {
@@ -21,13 +22,12 @@ const CommonImageRenderer = ({ imageData, renderMethod }: Props) => {
   const { latencySec, calculateLatency } = useLatencyCalculator();
   const { fps, totalFrames, droppedFrames, dropRate, countFrame } =
     useFrameStats();
+  const { elapsedSec, start } = useElapsedTime();
 
   const memoryUsage = useMemoryUsage();
 
   const handleLoad = (img: HTMLImageElement, renderTime: number) => {
-    console.log("Rendered image at", imageData.receiveTime);
-    console.log("Image loaded at", renderTime);
-
+    start();
     countFrame();
     updateResolution(img);
     calculateLatency(imageData.receiveTime, renderTime);
@@ -38,6 +38,13 @@ const CommonImageRenderer = ({ imageData, renderMethod }: Props) => {
       title="WebSocket Image Stream"
       renderItem={renderMethod(imageData.image, handleLoad)}
       metrics={[
+        {
+          label: "Elapsed Time",
+          value: elapsedSec,
+          unit: " s",
+          description:
+            "현재 탭에서 이미지 스트리밍을 시작한 이후 경과 시간입니다.",
+        },
         {
           label: "FPS",
           value: fps,

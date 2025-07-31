@@ -17,7 +17,7 @@ export const useFrameStats = () => {
       setTotalFrames((prev) => prev + received);
 
       frameCount.current = 0;
-    }, 1000);
+    }, 1500);
 
     return () => clearInterval(interval);
   }, []);

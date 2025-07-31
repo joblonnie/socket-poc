@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import useImageDataStore from "../store/useImageDataStore";
+import dayjs from "dayjs";
 
 export interface WebSocketMessage {
   agentIp: string;
@@ -32,11 +33,14 @@ export const useWebSocketReceiver = (url: string) => {
     };
 
     socket.onmessage = (e: MessageEvent<string>) => {
+      const receiveTime = dayjs().valueOf();
+
       const message: WebSocketMessage = JSON.parse(e.data);
 
       lastMessageRef.current = message.image;
       setImageData({
         image: message.image,
+        receiveTime,
         timestamp: message.timestamp,
       });
     };

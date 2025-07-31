@@ -13,7 +13,7 @@ type Props = {
 
 const ImageRendererView = ({ title, renderItem, metrics }: Props) => {
   const formatValue = (value: number) => {
-    return Number.isInteger(value) ? value : value.toFixed(2);
+    return Number.isInteger(value) ? value : value?.toFixed(2);
   };
 
   return (

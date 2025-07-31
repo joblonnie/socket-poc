@@ -1,13 +1,14 @@
 import { useWebSocketReceiver } from "./hooks/useWebSocket";
 import useImageDataStore from "./store/useImageDataStore";
 import CommonImageRenderer from "./components/renderer/CommonImageRenderer";
+import dayjs from "dayjs";
 
 const simpleRenderMethod = (
   base64: string,
   onLoad: (img: HTMLImageElement, renderTime: number) => void
 ) => {
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    onLoad(e.currentTarget, performance.now() / 1000);
+    onLoad(e.currentTarget, dayjs().valueOf());
   };
 
   return (

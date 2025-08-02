@@ -2,11 +2,11 @@ import dayjs from "dayjs";
 import CommonImageRenderer from "../widgets/CommonImageRenderer";
 import { WebSocketMessage } from "../../hooks/useWebSocket";
 
-const simpleRenderMethod = (
-  base64: string,
+const Base64RenderMethod = (
+  data: string | Uint8Array,
   onLoad: (img: HTMLImageElement, renderTime: number) => void
 ) => {
-  const src = `data:image/jpeg;base64,${base64}`;
+  const src = `data:image/jpeg;base64,${data}`;
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     onLoad(e.currentTarget, dayjs().valueOf());
@@ -28,14 +28,14 @@ type Props = {
   };
 };
 
-const PureBase64ImageRenderer = ({ imageData }: Props) => {
+const Base64ImageRenderer = ({ imageData }: Props) => {
   return (
     <CommonImageRenderer
       title="Pure Base64 WebSocket Image Stream"
       imageData={imageData}
-      renderMethod={simpleRenderMethod}
+      renderMethod={Base64RenderMethod}
     />
   );
 };
 
-export default PureBase64ImageRenderer;
+export default Base64ImageRenderer;

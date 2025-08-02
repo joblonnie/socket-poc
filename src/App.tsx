@@ -1,9 +1,10 @@
 import { useWebSocketReceiver } from "./hooks/useWebSocket";
 import useImageDataStore from "./store/useImageDataStore";
-import PureBase64ImageRenderer from "./components/test-case/PureBase64ImageRenderer";
+import PureBase64ImageRenderer from "./components/test-case/Base64ImageRenderer";
 import ObjectURLImageRenderer from "./components/test-case/ObjectURLImageRenderer";
 import CanvasBase64ImageRenderer from "./components/test-case/CanvasBase64ImageRenderer";
 import CanvasObjectURLImageRenderer from "./components/test-case/CanvasObjectURLImageRenderer";
+import BinaryImageRenderer from "./components/test-case/BinaryImageRenderer";
 
 function App() {
   useWebSocketReceiver(import.meta.env.VITE_WS_URL);
@@ -14,6 +15,13 @@ function App() {
     <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
       {imageData && (
         <>
+          <BinaryImageRenderer
+            imageData={{
+              image: imageData.image,
+              timestamp: imageData.timestamp,
+              receiveTime: imageData.receiveTime,
+            }}
+          />
           <PureBase64ImageRenderer
             imageData={{
               image: imageData.image,
@@ -28,7 +36,7 @@ function App() {
               receiveTime: imageData.receiveTime,
             }}
           />
-          <CanvasBase64ImageRenderer
+          {/* <CanvasBase64ImageRenderer
             imageData={{
               image: imageData.image,
               timestamp: imageData.timestamp,
@@ -41,7 +49,7 @@ function App() {
               timestamp: imageData.timestamp,
               receiveTime: imageData.receiveTime,
             }}
-          />
+          /> */}
         </>
       )}
     </div>

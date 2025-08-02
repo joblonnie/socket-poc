@@ -3,8 +3,8 @@ import CommonImageRenderer from "../widgets/CommonImageRenderer";
 import { WebSocketMessage } from "../../hooks/useWebSocket";
 import { useEffect, useRef, useState } from "react";
 
-const canvasRenderMethod = (
-  base64: string,
+const CanvasBase64RenderMethod = (
+  data: string | Uint8Array,
   onLoad: (img: HTMLImageElement, renderTime: number) => void
 ) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -29,8 +29,8 @@ const canvasRenderMethod = (
       console.error("이미지 로딩 실패");
     };
 
-    img.src = `data:image/jpeg;base64,${base64}`;
-  }, [base64]);
+    img.src = `data:image/jpeg;base64,${data}`;
+  }, [data]);
 
   return <canvas ref={canvasRef} style={{ width: "300px", height: "auto" }} />;
 };
@@ -44,9 +44,9 @@ type Props = {
 const CanvasBase64ImageRenderer = ({ imageData }: Props) => {
   return (
     <CommonImageRenderer
-      title="Canvas WebSocket Image Stream"
+      title="Canvas Base64 WebSocket Image Stream"
       imageData={imageData}
-      renderMethod={canvasRenderMethod}
+      renderMethod={CanvasBase64RenderMethod}
     />
   );
 };

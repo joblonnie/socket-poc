@@ -3,7 +3,7 @@ import CommonImageRenderer from "../widgets/CommonImageRenderer";
 import { WebSocketMessage } from "../../hooks/useWebSocket";
 import { useObjectURL } from "../../hooks/useObjectURL";
 
-const ObjectURLRenderMethod = (
+const BinaryImageRenderMethod = (
   data: string | Uint8Array,
   onLoad: (img: HTMLImageElement, renderTime: number) => void
 ) => {
@@ -34,14 +34,14 @@ type Props = {
   };
 };
 
-const ObjectURLImageRenderer = ({ imageData }: Props) => {
+const BinaryImageRenderer = ({ imageData }: Props) => {
   return (
     <CommonImageRenderer
-      title="Object URL WebSocket Image Stream"
+      title="Binary WebSocket Image Stream"
       imageData={imageData}
-      renderMethod={ObjectURLRenderMethod}
+      renderMethod={BinaryImageRenderMethod}
     />
   );
 };
 
-export default ObjectURLImageRenderer;
+export default BinaryImageRenderer;

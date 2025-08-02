@@ -1,14 +1,15 @@
 import dayjs from "dayjs";
 import CommonImageRenderer from "../widgets/CommonImageRenderer";
 import { WebSocketMessage } from "../../hooks/useWebSocket";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useObjectURL } from "../../hooks/useObjectURL";
 
-const canvasRenderMethod = (
-  base64: string,
+const CanvasObjectURLRenderMethod = (
+  data: string | Uint8Array,
   onLoad: (img: HTMLImageElement, renderTime: number) => void
 ) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const objectURL = useObjectURL(data);
 
   useEffect(() => {
     const img = new Image();
@@ -30,10 +31,8 @@ const canvasRenderMethod = (
       console.error("이미지 로딩 실패");
     };
 
-    const objectURL = useObjectURL(base64);
-
     img.src = objectURL;
-  }, [base64]);
+  }, [data]);
 
   return <canvas ref={canvasRef} style={{ width: "300px", height: "auto" }} />;
 };
@@ -47,9 +46,9 @@ type Props = {
 const CanvasObjectURLImageRenderer = ({ imageData }: Props) => {
   return (
     <CommonImageRenderer
-      title="Canvas WebSocket Image Stream"
+      title="Canvas Object URL WebSocket Image Stream"
       imageData={imageData}
-      renderMethod={canvasRenderMethod}
+      renderMethod={CanvasObjectURLRenderMethod}
     />
   );
 };

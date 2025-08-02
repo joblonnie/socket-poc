@@ -1,34 +1,55 @@
 import { useEffect, useRef } from "react";
 
-const objectURLCache = new Map<string, string>();
+const objectURLCacheBase64 = new Map<string, string>();
+const objectURLCacheBinary = new WeakMap<Uint8Array, string>();
 
-export function useObjectURL(base64: string, mimeType = "image/jpeg") {
+export function useObjectURL(
+  data: string | Uint8Array,
+  mimeType = "image/jpeg"
+) {
   const urlRef = useRef<string | null>(null);
 
-  if (!objectURLCache.has(base64)) {
-    const byteString = atob(base64);
-    const arrayBuffer = new ArrayBuffer(byteString.length);
-    const uint8Array = new Uint8Array(arrayBuffer);
+  if (typeof data === "string") {
+    // base64 처리
+    if (!objectURLCacheBase64.has(data)) {
+      const byteString = atob(data);
+      const arrayBuffer = new ArrayBuffer(byteString.length);
+      const uint8Array = new Uint8Array(arrayBuffer);
 
-    for (let i = 0; i < byteString.length; i++) {
-      uint8Array[i] = byteString.charCodeAt(i);
+      for (let i = 0; i < byteString.length; i++) {
+        uint8Array[i] = byteString.charCodeAt(i);
+      }
+
+      const blob = new Blob([uint8Array], { type: mimeType });
+      const objectURL = URL.createObjectURL(blob);
+      objectURLCacheBase64.set(data, objectURL);
     }
 
-    const blob = new Blob([uint8Array], { type: mimeType });
-    const objectURL = URL.createObjectURL(blob);
-    objectURLCache.set(base64, objectURL);
+    urlRef.current = objectURLCacheBase64.get(data)!;
+  } else {
+    // binary 처리
+    if (!objectURLCacheBinary.has(data)) {
+      const blob = new Blob([data], { type: mimeType });
+      const objectURL = URL.createObjectURL(blob);
+      objectURLCacheBinary.set(data, objectURL);
+    }
+
+    urlRef.current = objectURLCacheBinary.get(data)!;
   }
 
-  urlRef.current = objectURLCache.get(base64)!;
-
-  // 클린업 (선택적으로 revokeObjectURL 적용 가능)
   useEffect(() => {
     const currentUrl = urlRef.current;
 
     return () => {
-      URL.revokeObjectURL(currentUrl!); // 수동 정리 원할 경우 활성화
+      URL.revokeObjectURL(currentUrl!);
+
+      if (typeof data === "string") {
+        objectURLCacheBase64.delete(data);
+      } else {
+        objectURLCacheBinary.delete(data);
+      }
     };
-  }, [base64]);
+  }, [data]);
 
   return urlRef.current;
 }

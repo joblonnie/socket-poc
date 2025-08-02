@@ -12,7 +12,7 @@ type Props = {
     receiveTime: number;
   };
   renderMethod: (
-    base64: string,
+    data: string | Uint8Array,
     onLoad: (img: HTMLImageElement, renderTime: number) => void
   ) => React.ReactNode;
 };

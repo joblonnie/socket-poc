@@ -5,81 +5,68 @@ import Base64ImageRenderer from "./components/data-format-test/Base64ImageRender
 import { useState } from "react";
 import MultiLineChart from "./components/ui/MultiLineChart";
 import { createLatencyOption, createSizeOption } from "./utils/chartOptions";
-import ObjectURLImageRenderer from "./components/data-format-test/ObjectURLImageRenderer";
 
 function App() {
+  const [format, setFormat] = useState<"base64" | "binary">("base64");
+
   const [base64Latencies, setBase64Latencies] = useState<number[]>([]);
   const [binaryLatencies, setBinaryLatencies] = useState<number[]>([]);
-
   const [base64SizeData, setBase64SizeData] = useState<number[]>([]);
   const [binarySizeData, setBinarySizeData] = useState<number[]>([]);
 
-  useWebSocketReceiverBase64(import.meta.env.VITE_WS_URL_BASE64);
-  useWebSocketReceiverBinary(import.meta.env.VITE_WS_URL_BINARY);
+  if (format === "base64") {
+    useWebSocketReceiverBase64(import.meta.env.VITE_WS_URL_BASE64);
+  } else {
+    useWebSocketReceiverBinary(import.meta.env.VITE_WS_URL_BINARY);
+  }
 
-  const latencylength = Math.max(
-    base64Latencies.length,
-    base64Latencies.length
-  );
-  const latencyXAxisData = Array.from({ length: latencylength }, (_, i) =>
-    i.toString()
+  const latencyXAxisData = Array.from(
+    { length: Math.max(base64Latencies.length, binaryLatencies.length) },
+    (_, i) => i.toString()
   );
 
-  const sizeLength = Math.max(base64SizeData.length, binarySizeData.length);
-  const sizeXAxisData = Array.from({ length: sizeLength }, (_, i) =>
-    i.toString()
+  const sizeXAxisData = Array.from(
+    { length: Math.max(base64SizeData.length, binarySizeData.length) },
+    (_, i) => i.toString()
   );
 
   const latencyOption = createLatencyOption({
-    base64Data: base64Latencies,
-    arrayBufferData: binaryLatencies,
+    base64Data: format === "base64" ? base64Latencies : [],
+    arrayBufferData: format === "binary" ? binaryLatencies : [],
     xAxisData: latencyXAxisData,
   });
 
   const sizeOption = createSizeOption({
-    base64Data: base64SizeData,
-    arrayBufferData: binarySizeData,
+    base64Data: format === "base64" ? base64SizeData : [],
+    arrayBufferData: format === "binary" ? binarySizeData : [],
     xAxisData: sizeXAxisData,
   });
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexDirection: "row",
-        alignItems: "flex-start",
-        gap: "24px",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          flex: 1,
-        }}
-      >
-        <Base64ImageRenderer
-          onLatencyUpdate={setBase64Latencies}
-          onImageSizeUpdate={setBase64SizeData}
-        />
-        <BinaryImageRenderer
-          onLatencyUpdate={setBinaryLatencies}
-          onImageSizeUpdate={setBinarySizeData}
-        />
+    <div>
+      <div style={{ marginBottom: "16px" }}>
+        <button onClick={() => setFormat("base64")}>Base64 테스트</button>
+        <button onClick={() => setFormat("binary")}>Binary 테스트</button>
       </div>
 
-      <div
-        style={{
-          padding: 12,
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px",
-          flex: 2,
-        }}
-      >
-        <MultiLineChart option={latencyOption} />
-        <MultiLineChart option={sizeOption} />
+      <div style={{ display: "flex", gap: "24px" }}>
+        <div style={{ flex: 1 }}>
+          {format === "base64" ? (
+            <Base64ImageRenderer
+              onLatencyUpdate={setBase64Latencies}
+              onImageSizeUpdate={setBase64SizeData}
+            />
+          ) : (
+            <BinaryImageRenderer
+              onLatencyUpdate={setBinaryLatencies}
+              onImageSizeUpdate={setBinarySizeData}
+            />
+          )}
+        </div>
+        <div style={{ flex: 2 }}>
+          <MultiLineChart option={latencyOption} />
+          <MultiLineChart option={sizeOption} />
+        </div>
       </div>
     </div>
   );

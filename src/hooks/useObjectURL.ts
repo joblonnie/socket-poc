@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 
 const objectURLCacheBase64 = new Map<string, string>();
-const objectURLCacheBinary = new WeakMap<Uint8Array, string>();
+const objectURLCacheBinary = new WeakMap<ArrayBuffer, string>();
 
 export function useObjectURL(
-  data: string | Uint8Array,
+  data: string | ArrayBuffer,
   mimeType = "image/jpeg"
 ) {
   const urlRef = useRef<string | null>(null);

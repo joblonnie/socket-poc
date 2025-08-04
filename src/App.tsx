@@ -1,57 +1,86 @@
-import { useWebSocketReceiver } from "./hooks/useWebSocket";
-import useImageDataStore from "./store/useImageDataStore";
-import PureBase64ImageRenderer from "./components/test-case/Base64ImageRenderer";
-import ObjectURLImageRenderer from "./components/test-case/ObjectURLImageRenderer";
-import CanvasBase64ImageRenderer from "./components/test-case/CanvasBase64ImageRenderer";
-import CanvasObjectURLImageRenderer from "./components/test-case/CanvasObjectURLImageRenderer";
-import BinaryImageRenderer from "./components/test-case/BinaryImageRenderer";
+import BinaryImageRenderer from "./components/data-format-test/BinaryImageRenderer";
+import { useWebSocketReceiverBase64 } from "./hooks/useWebSocketReceiverBase64";
+import { useWebSocketReceiverBinary } from "./hooks/useWebSocketReceiverBinary";
+import Base64ImageRenderer from "./components/data-format-test/Base64ImageRenderer";
+import { useState } from "react";
+import MultiLineChart from "./components/ui/MultiLineChart";
+import { createLatencyOption, createSizeOption } from "./utils/chartOptions";
+import ObjectURLImageRenderer from "./components/data-format-test/ObjectURLImageRenderer";
 
 function App() {
-  useWebSocketReceiver(import.meta.env.VITE_WS_URL);
+  const [base64Latencies, setBase64Latencies] = useState<number[]>([]);
+  const [binaryLatencies, setBinaryLatencies] = useState<number[]>([]);
 
-  const imageData = useImageDataStore((state) => state.data);
+  const [base64SizeData, setBase64SizeData] = useState<number[]>([]);
+  const [binarySizeData, setBinarySizeData] = useState<number[]>([]);
+
+  useWebSocketReceiverBase64(import.meta.env.VITE_WS_URL_BASE64);
+  useWebSocketReceiverBinary(import.meta.env.VITE_WS_URL_BINARY);
+
+  const latencylength = Math.max(
+    base64Latencies.length,
+    base64Latencies.length
+  );
+  const latencyXAxisData = Array.from({ length: latencylength }, (_, i) =>
+    i.toString()
+  );
+
+  const sizeLength = Math.max(base64SizeData.length, binarySizeData.length);
+  const sizeXAxisData = Array.from({ length: sizeLength }, (_, i) =>
+    i.toString()
+  );
+
+  const latencyOption = createLatencyOption({
+    base64Data: base64Latencies,
+    arrayBufferData: binaryLatencies,
+    xAxisData: latencyXAxisData,
+  });
+
+  const sizeOption = createSizeOption({
+    base64Data: base64SizeData,
+    arrayBufferData: binarySizeData,
+    xAxisData: sizeXAxisData,
+  });
 
   return (
-    <div style={{ display: "flex", justifyContent: "center", gap: "12px" }}>
-      {imageData && (
-        <>
-          <BinaryImageRenderer
-            imageData={{
-              image: imageData.image,
-              timestamp: imageData.timestamp,
-              receiveTime: imageData.receiveTime,
-            }}
-          />
-          <PureBase64ImageRenderer
-            imageData={{
-              image: imageData.image,
-              timestamp: imageData.timestamp,
-              receiveTime: imageData.receiveTime,
-            }}
-          />
-          <ObjectURLImageRenderer
-            imageData={{
-              image: imageData.image,
-              timestamp: imageData.timestamp,
-              receiveTime: imageData.receiveTime,
-            }}
-          />
-          {/* <CanvasBase64ImageRenderer
-            imageData={{
-              image: imageData.image,
-              timestamp: imageData.timestamp,
-              receiveTime: imageData.receiveTime,
-            }}
-          />
-          <CanvasObjectURLImageRenderer
-            imageData={{
-              image: imageData.image,
-              timestamp: imageData.timestamp,
-              receiveTime: imageData.receiveTime,
-            }}
-          /> */}
-        </>
-      )}
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        alignItems: "flex-start",
+        gap: "24px",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          flex: 1,
+        }}
+      >
+        <Base64ImageRenderer
+          onLatencyUpdate={setBase64Latencies}
+          onImageSizeUpdate={setBase64SizeData}
+        />
+        <BinaryImageRenderer
+          onLatencyUpdate={setBinaryLatencies}
+          onImageSizeUpdate={setBinarySizeData}
+        />
+      </div>
+
+      <div
+        style={{
+          padding: 12,
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          flex: 2,
+        }}
+      >
+        <MultiLineChart option={latencyOption} />
+        <MultiLineChart option={sizeOption} />
+      </div>
     </div>
   );
 }

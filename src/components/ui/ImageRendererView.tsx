@@ -8,7 +8,7 @@ type Metric = {
 type Props = {
   title: string;
   renderItem: React.ReactNode;
-  metrics: Metric[];
+  metrics?: Metric[];
 };
 
 const ImageRendererView = ({ title, renderItem, metrics }: Props) => {
@@ -32,17 +32,19 @@ const ImageRendererView = ({ title, renderItem, metrics }: Props) => {
 
       <div style={{ marginBottom: "16px" }}>{renderItem}</div>
 
-      <div>
-        {metrics.map(({ label, value, unit, description }) => (
-          <div key={label} style={{ marginBottom: "0.5rem" }}>
-            <strong>{label}:</strong> {formatValue(value)}
-            {unit ? ` ${unit}` : ""}
-            <div style={{ fontSize: "0.75rem", color: "#666" }}>
-              {description}
+      {metrics && (
+        <div>
+          {metrics.map(({ label, value, unit, description }) => (
+            <div key={label} style={{ marginBottom: "0.5rem" }}>
+              <strong>{label}:</strong> {formatValue(value)}
+              {unit ? ` ${unit}` : ""}
+              <div style={{ fontSize: "0.75rem", color: "#666" }}>
+                {description}
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 };

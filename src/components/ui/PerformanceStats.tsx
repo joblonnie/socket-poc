@@ -239,8 +239,8 @@ const PerformanceStats: React.FC<Props> = ({
       )}
 
       {/* 실시간 레이턴시 차트 */}
-      {(base64DirectLatencies.length > 0 || 
-        base64ObjectUrlLatencies.length > 0 || 
+      {(base64DirectLatencies.length > 0 ||
+        base64ObjectUrlLatencies.length > 0 ||
         binaryObjectUrlLatencies.length > 0) && (
         <div style={{ marginTop: "16px" }}>
           <LatencyChart

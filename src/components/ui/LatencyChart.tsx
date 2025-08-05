@@ -60,7 +60,9 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
           let tooltipText = `측정 #${params[0].axisValue}<br/>`;
           params.forEach((param: any) => {
             if (param.value !== null && param.value !== undefined) {
-              tooltipText += `${param.seriesName}: ${param.value.toFixed(2)}ms<br/>`;
+              tooltipText += `${param.seriesName}: ${param.value.toFixed(
+                2
+              )}ms<br/>`;
             }
           });
           return tooltipText;

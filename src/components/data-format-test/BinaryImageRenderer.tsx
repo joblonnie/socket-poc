@@ -2,7 +2,7 @@ import ImageRendererView from "../ui/ImageRendererView";
 import useBinaryImageStore from "../../store/useBinaryStore";
 import { useEffect } from "react";
 import useImageLatencyTracker from "../../hooks/useImageLatencyTracker";
-import { useObjectURLNoCache } from "../../hooks/useObjectURLNoCache";
+import { useBinaryToObjectURL } from "../../hooks/useBinaryToObjectURL";
 import { useImageSizeTracker } from "../../hooks/useImageSizeTracker";
 
 type Props = {
@@ -17,7 +17,7 @@ const BinaryImageRenderer = ({ onLatencyUpdate, onImageSizeUpdate }: Props) => {
 
   const { sizes, addSize } = useImageSizeTracker();
 
-  const objectURL = useObjectURLNoCache(binaryImageData || "", "image/jpeg");
+  const objectURL = useBinaryToObjectURL(binaryImageData || null, "image/jpeg");
 
   const handleLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
     end();
@@ -47,12 +47,16 @@ const BinaryImageRenderer = ({ onLatencyUpdate, onImageSizeUpdate }: Props) => {
 
   return (
     <ImageRendererView
-      title={"Binary WebSocket Image Stream"}
       renderItem={
         <img
           src={objectURL}
           alt="WebSocket Stream"
-          style={{ width: "300px", height: "auto" }}
+          style={{
+            width: "250px",
+            height: "auto",
+            maxHeight: "200px",
+            objectFit: "contain",
+          }}
           onLoad={handleLoad}
         />
       }

@@ -2,73 +2,348 @@ import BinaryImageRenderer from "./components/data-format-test/BinaryImageRender
 import { useWebSocketReceiverBase64 } from "./hooks/useWebSocketReceiverBase64";
 import { useWebSocketReceiverBinary } from "./hooks/useWebSocketReceiverBinary";
 import Base64ImageRenderer from "./components/data-format-test/Base64ImageRenderer";
+import ObjectURLImageRenderer from "./components/data-format-test/ObjectURLImageRenderer";
 import { useState } from "react";
-import MultiLineChart from "./components/ui/MultiLineChart";
-import { createLatencyOption, createSizeOption } from "./utils/chartOptions";
+import PerformanceStats from "./components/ui/PerformanceStats";
+
+type ComparisonType = "base64-direct" | "base64-objecturl" | "binary-objecturl";
+
+interface ComparisonConfig {
+  type: ComparisonType;
+  label: string;
+  color: string;
+  description: string;
+}
 
 function App() {
-  const [format, setFormat] = useState<"base64" | "binary">("base64");
+  const [viewMode, setViewMode] = useState<"single" | "comparison">(
+    "comparison"
+  );
+  const [singleType, setSingleType] = useState<ComparisonType>("base64-direct");
 
-  const [base64Latencies, setBase64Latencies] = useState<number[]>([]);
-  const [binaryLatencies, setBinaryLatencies] = useState<number[]>([]);
+  // Available comparison configurations
+  const availableConfigs: ComparisonConfig[] = [
+    {
+      type: "base64-direct",
+      label: "Base64 직접 사용",
+      color: "#1890ff",
+      description: "Base64 data URL로 직접 IMG 태그에 사용",
+    },
+    {
+      type: "base64-objecturl",
+      label: "Base64 → ObjectURL",
+      color: "#722ed1",
+      description: "Base64를 ObjectURL로 변환 후 IMG 태그에 사용",
+    },
+    {
+      type: "binary-objecturl",
+      label: "Binary → ObjectURL",
+      color: "#52c41a",
+      description: "Binary 데이터를 ObjectURL로 변환 후 IMG 태그에 사용",
+    },
+  ];
+
+  // For comparison mode, track which configurations are enabled
+  const [enabledConfigs, setEnabledConfigs] = useState<ComparisonConfig[]>([
+    availableConfigs[0], // Base64 직접 사용
+    availableConfigs[1], // Base64 → ObjectURL
+    availableConfigs[2], // Binary → ObjectURL
+  ]);
+
+  const [base64DirectLatencies, setBase64DirectLatencies] = useState<number[]>(
+    []
+  );
+  const [base64ObjectUrlLatencies, setBase64ObjectUrlLatencies] = useState<
+    number[]
+  >([]);
+  const [binaryObjectUrlLatencies, setBinaryObjectUrlLatencies] = useState<
+    number[]
+  >([]);
   const [base64SizeData, setBase64SizeData] = useState<number[]>([]);
   const [binarySizeData, setBinarySizeData] = useState<number[]>([]);
 
-  if (format === "base64") {
-    useWebSocketReceiverBase64(import.meta.env.VITE_WS_URL_BASE64);
-  } else {
-    useWebSocketReceiverBinary(import.meta.env.VITE_WS_URL_BINARY);
-  }
-
-  const latencyXAxisData = Array.from(
-    { length: Math.max(base64Latencies.length, binaryLatencies.length) },
-    (_, i) => i.toString()
+  // Always call hooks to avoid conditional hook calls
+  // Base64 WebSocket - active when needed
+  const shouldConnectBase64 =
+    (viewMode === "comparison" &&
+      enabledConfigs.some((config) => config.type.startsWith("base64"))) ||
+    (viewMode === "single" && singleType.startsWith("base64"));
+  useWebSocketReceiverBase64(
+    shouldConnectBase64 ? import.meta.env.VITE_WS_URL_BASE64 : null
   );
 
-  const sizeXAxisData = Array.from(
-    { length: Math.max(base64SizeData.length, binarySizeData.length) },
-    (_, i) => i.toString()
+  // Binary WebSocket - active when needed
+  const shouldConnectBinary =
+    (viewMode === "comparison" &&
+      enabledConfigs.some((config) => config.type === "binary-objecturl")) ||
+    (viewMode === "single" && singleType === "binary-objecturl");
+  useWebSocketReceiverBinary(
+    shouldConnectBinary ? import.meta.env.VITE_WS_URL_BINARY : null
   );
 
-  const latencyOption = createLatencyOption({
-    base64Data: format === "base64" ? base64Latencies : [],
-    arrayBufferData: format === "binary" ? binaryLatencies : [],
-    xAxisData: latencyXAxisData,
-  });
+  const toggleConfig = (config: ComparisonConfig) => {
+    setEnabledConfigs((prev) => {
+      const exists = prev.find((c) => c.type === config.type);
+      if (exists) {
+        return prev.filter((c) => c.type !== config.type);
+      } else {
+        return [...prev, config];
+      }
+    });
+  };
 
-  const sizeOption = createSizeOption({
-    base64Data: format === "base64" ? base64SizeData : [],
-    arrayBufferData: format === "binary" ? binarySizeData : [],
-    xAxisData: sizeXAxisData,
-  });
+  // Helper function to render appropriate component
+  const renderComponent = (type: ComparisonType) => {
+    switch (type) {
+      case "base64-direct":
+        return (
+          <Base64ImageRenderer
+            onLatencyUpdate={setBase64DirectLatencies}
+            onImageSizeUpdate={setBase64SizeData}
+          />
+        );
+      case "base64-objecturl":
+        return (
+          <ObjectURLImageRenderer
+            onLatencyUpdate={setBase64ObjectUrlLatencies}
+            onImageSizeUpdate={setBase64SizeData}
+          />
+        );
+      case "binary-objecturl":
+        return (
+          <BinaryImageRenderer
+            onLatencyUpdate={setBinaryObjectUrlLatencies}
+            onImageSizeUpdate={setBinarySizeData}
+          />
+        );
+      default:
+        return null;
+    }
+  };
 
   return (
-    <div>
-      <div style={{ marginBottom: "16px" }}>
-        <button onClick={() => setFormat("base64")}>Base64 테스트</button>
-        <button onClick={() => setFormat("binary")}>Binary 테스트</button>
+    <div style={{ height: "100%", display: "flex", flexDirection: "column" }}>
+      {/* Header Controls */}
+      <div style={{ padding: "16px", borderBottom: "1px solid #ddd" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <button
+            onClick={() => setViewMode("single")}
+            style={{
+              backgroundColor:
+                viewMode === "single" ? "#007acc" : "transparent",
+              color: viewMode === "single" ? "white" : "black",
+              padding: "8px 16px",
+              border: "1px solid #007acc",
+              borderRadius: "4px",
+              cursor: "pointer",
+            }}
+          >
+            단일 비교
+          </button>
+          <button
+            onClick={() => setViewMode("comparison")}
+            style={{
+              backgroundColor:
+                viewMode === "comparison" ? "#007acc" : "transparent",
+              color: viewMode === "comparison" ? "white" : "black",
+              padding: "8px 16px",
+              border: "1px solid #007acc",
+              borderRadius: "4px",
+              marginLeft: "8px",
+              cursor: "pointer",
+            }}
+          >
+            다중 비교
+          </button>
+        </div>
+
+        {viewMode === "single" && (
+          <div style={{ marginBottom: "12px" }}>
+            <label style={{ marginRight: "12px" }}>렌더링 방식:</label>
+            <select
+              value={singleType}
+              onChange={(e) => setSingleType(e.target.value as ComparisonType)}
+              style={{ padding: "4px 8px", borderRadius: "4px" }}
+            >
+              {availableConfigs.map((config) => (
+                <option key={config.type} value={config.type}>
+                  {config.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {viewMode === "comparison" && (
+          <div>
+            <h4 style={{ margin: "0 0 8px 0" }}>비교할 렌더링 방식 선택:</h4>
+            <div style={{ display: "flex", gap: "12px", flexWrap: "wrap" }}>
+              {availableConfigs.map((config) => {
+                const isEnabled = enabledConfigs.some(
+                  (c) => c.type === config.type
+                );
+                return (
+                  <button
+                    key={config.type}
+                    onClick={() => toggleConfig(config)}
+                    style={{
+                      backgroundColor: isEnabled ? config.color : "transparent",
+                      color: isEnabled ? "white" : config.color,
+                      padding: "8px 12px",
+                      border: `1px solid ${config.color}`,
+                      borderRadius: "4px",
+                      cursor: "pointer",
+                      fontSize: "12px",
+                    }}
+                    title={config.description}
+                  >
+                    {config.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      <div style={{ display: "flex", gap: "24px" }}>
-        <div style={{ flex: 1 }}>
-          {format === "base64" ? (
-            <Base64ImageRenderer
-              onLatencyUpdate={setBase64Latencies}
-              onImageSizeUpdate={setBase64SizeData}
-            />
+      {/* Main Content */}
+      <div style={{ flex: 1, display: "flex", flexDirection: "column" }}>
+        {/* Video Area - 더 작게 */}
+        <div
+          style={{
+            padding: "16px",
+            backgroundColor: "#f8f9fa",
+            overflow: "auto",
+          }}
+        >
+          {viewMode === "single" ? (
+            <div>
+              <h3
+                style={{
+                  margin: "0 0 16px 0",
+                  textAlign: "center",
+                  fontSize: "18px",
+                }}
+              >
+                {availableConfigs.find((c) => c.type === singleType)?.label}
+              </h3>
+              <div style={{ display: "flex", justifyContent: "center" }}>
+                {renderComponent(singleType)}
+              </div>
+            </div>
           ) : (
-            <BinaryImageRenderer
-              onLatencyUpdate={setBinaryLatencies}
-              onImageSizeUpdate={setBinarySizeData}
-            />
+            <div>
+              <h3
+                style={{
+                  margin: "0 0 16px 0",
+                  textAlign: "center",
+                  fontSize: "18px",
+                }}
+              >
+                렌더링 방식 비교
+              </h3>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", // 최소 크기 줄임
+                  gap: "12px", // 간격 줄임
+                  maxWidth: "1200px",
+                  margin: "0 auto",
+                }}
+              >
+                {enabledConfigs.map((config) => (
+                  <div
+                    key={config.type}
+                    style={{
+                      border: `2px solid ${config.color}`,
+                      borderRadius: "8px",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <div
+                      style={{
+                        backgroundColor: config.color,
+                        color: "white",
+                        padding: "6px 10px", // 패딩 줄임
+                        fontWeight: "bold",
+                        fontSize: "12px", // 폰트 크기 줄임
+                      }}
+                    >
+                      {config.label}
+                    </div>
+                    <div style={{ padding: "8px" }}>
+                      {" "}
+                      {/* 패딩 줄임 */}
+                      {renderComponent(config.type)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
-        <div style={{ flex: 2 }}>
-          <MultiLineChart option={latencyOption} />
-          <MultiLineChart option={sizeOption} />
+
+        {/* Bottom: Statistics - 더 큰 영역 */}
+        <div
+          style={{
+            flex: 1, // 남은 공간 모두 사용
+            padding: "12px 16px",
+            backgroundColor: "#fafafa",
+            borderTop: "1px solid #ddd",
+            overflow: "auto",
+          }}
+        >
+          <PerformanceStats
+            base64DirectLatencies={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "base64-direct"
+                )) ||
+              (viewMode === "single" && singleType === "base64-direct")
+                ? base64DirectLatencies
+                : []
+            }
+            base64ObjectUrlLatencies={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "base64-objecturl"
+                )) ||
+              (viewMode === "single" && singleType === "base64-objecturl")
+                ? base64ObjectUrlLatencies
+                : []
+            }
+            binaryObjectUrlLatencies={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "binary-objecturl"
+                )) ||
+              (viewMode === "single" && singleType === "binary-objecturl")
+                ? binaryObjectUrlLatencies
+                : []
+            }
+            base64Sizes={
+              (viewMode === "comparison" &&
+                enabledConfigs.some((config) =>
+                  config.type.startsWith("base64")
+                )) ||
+              (viewMode === "single" && singleType.startsWith("base64"))
+                ? base64SizeData
+                : []
+            }
+            binarySizes={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "binary-objecturl"
+                )) ||
+              (viewMode === "single" && singleType === "binary-objecturl")
+                ? binarySizeData
+                : []
+            }
+          />
         </div>
       </div>
     </div>
   );
 }
+
 export default App;

@@ -47,12 +47,16 @@ const Base64ImageRenderer = ({ onLatencyUpdate, onImageSizeUpdate }: Props) => {
 
   return (
     <ImageRendererView
-      title={"Base64 WebSocket Image Stream"}
       renderItem={
         <img
           src={src}
           alt="WebSocket Stream"
-          style={{ width: "300px", height: "auto" }}
+          style={{
+            width: "250px",
+            height: "auto",
+            maxHeight: "200px",
+            objectFit: "contain",
+          }}
           onLoad={handleLoad}
         />
       }

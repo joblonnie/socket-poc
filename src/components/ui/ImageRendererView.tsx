@@ -6,12 +6,11 @@ type Metric = {
 };
 
 type Props = {
-  title: string;
   renderItem: React.ReactNode;
   metrics?: Metric[];
 };
 
-const ImageRendererView = ({ title, renderItem, metrics }: Props) => {
+const ImageRendererView = ({ renderItem, metrics }: Props) => {
   const formatValue = (value: number) => {
     return Number.isInteger(value) ? value : value?.toFixed(2);
   };
@@ -20,16 +19,10 @@ const ImageRendererView = ({ title, renderItem, metrics }: Props) => {
     <section
       style={{
         padding: "16px",
-        border: "1px solid #ccc",
-        borderRadius: "8px",
         marginBottom: "24px",
         width: "fit-content",
       }}
     >
-      <header style={{ marginBottom: "12px" }}>
-        <h2 style={{ fontSize: "18px", fontWeight: "bold" }}>{title}</h2>
-      </header>
-
       <div style={{ marginBottom: "16px" }}>{renderItem}</div>
 
       {metrics && (

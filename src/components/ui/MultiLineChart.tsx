@@ -30,7 +30,7 @@ const MultiLineChart = ({ option, style }: MultiLineChartProps) => {
   }, []);
 
   return (
-    <div ref={chartRef} style={{ width: "100%", height: 200, ...style }} />
+    <div ref={chartRef} style={{ width: "100%", height: 180, ...style }} />
   );
 };
 

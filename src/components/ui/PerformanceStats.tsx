@@ -10,6 +10,8 @@ type Props = {
   base64DirectLatencies: number[];
   base64ObjectUrlLatencies: number[];
   binaryObjectUrlLatencies: number[];
+  base64OffscreenLatencies: number[];
+  binaryOffscreenLatencies: number[];
   base64Sizes: number[];
   binarySizes: number[];
 };
@@ -18,12 +20,16 @@ const PerformanceStats: React.FC<Props> = ({
   base64DirectLatencies,
   base64ObjectUrlLatencies,
   binaryObjectUrlLatencies,
+  base64OffscreenLatencies,
+  binaryOffscreenLatencies,
   base64Sizes,
   binarySizes,
 }) => {
   const base64DirectAvgLatency = calculateAverage(base64DirectLatencies);
   const base64ObjectUrlAvgLatency = calculateAverage(base64ObjectUrlLatencies);
   const binaryObjectUrlAvgLatency = calculateAverage(binaryObjectUrlLatencies);
+  const base64OffscreenAvgLatency = calculateAverage(base64OffscreenLatencies);
+  const binaryOffscreenAvgLatency = calculateAverage(binaryOffscreenLatencies);
   const base64AvgSize = calculateAverage(base64Sizes);
   const binaryAvgSize = calculateAverage(binarySizes);
 
@@ -146,6 +152,72 @@ const PerformanceStats: React.FC<Props> = ({
             </div>
           </div>
         )}
+
+        {/* Base64 → OffscreenCanvas */}
+        {base64OffscreenLatencies.length > 0 && (
+          <div
+            style={{
+              padding: "8px",
+              backgroundColor: "#fff",
+              borderRadius: "6px",
+              border: "2px solid #fa8c16",
+            }}
+          >
+            <h4
+              style={{
+                marginBottom: "4px",
+                color: "#fa8c16",
+                fontSize: "14px",
+              }}
+            >
+              Base64→Canvas
+            </h4>
+            <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+              <strong>{formatLatency(base64OffscreenAvgLatency)}</strong>
+              <span
+                style={{ marginLeft: "4px", color: "#666", fontSize: "10px" }}
+              >
+                ({base64OffscreenLatencies.length}회)
+              </span>
+            </div>
+            <div style={{ fontSize: "10px", color: "#666" }}>
+              🚀 OffscreenCanvas + WebWorker
+            </div>
+          </div>
+        )}
+
+        {/* Binary → OffscreenCanvas */}
+        {binaryOffscreenLatencies.length > 0 && (
+          <div
+            style={{
+              padding: "8px",
+              backgroundColor: "#fff",
+              borderRadius: "6px",
+              border: "2px solid #eb2f96",
+            }}
+          >
+            <h4
+              style={{
+                marginBottom: "4px",
+                color: "#eb2f96",
+                fontSize: "14px",
+              }}
+            >
+              Binary→Canvas
+            </h4>
+            <div style={{ fontSize: "12px", marginBottom: "2px" }}>
+              <strong>{formatLatency(binaryOffscreenAvgLatency)}</strong>
+              <span
+                style={{ marginLeft: "4px", color: "#666", fontSize: "10px" }}
+              >
+                ({binaryOffscreenLatencies.length}회)
+              </span>
+            </div>
+            <div style={{ fontSize: "10px", color: "#666" }}>
+              ⚡ Binary + OffscreenCanvas
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 데이터 크기 정보 - 컴팩트 */}
@@ -241,12 +313,16 @@ const PerformanceStats: React.FC<Props> = ({
       {/* 실시간 레이턴시 차트 */}
       {(base64DirectLatencies.length > 0 ||
         base64ObjectUrlLatencies.length > 0 ||
-        binaryObjectUrlLatencies.length > 0) && (
+        binaryObjectUrlLatencies.length > 0 ||
+        base64OffscreenLatencies.length > 0 ||
+        binaryOffscreenLatencies.length > 0) && (
         <div style={{ marginTop: "16px" }}>
           <LatencyChart
             base64DirectLatencies={base64DirectLatencies}
             base64ObjectUrlLatencies={base64ObjectUrlLatencies}
             binaryObjectUrlLatencies={binaryObjectUrlLatencies}
+            base64OffscreenLatencies={base64OffscreenLatencies}
+            binaryOffscreenLatencies={binaryOffscreenLatencies}
             maxDataPoints={30}
           />
         </div>

@@ -3,10 +3,17 @@ import { useWebSocketReceiverBase64 } from "./hooks/useWebSocketReceiverBase64";
 import { useWebSocketReceiverBinary } from "./hooks/useWebSocketReceiverBinary";
 import Base64ImageRenderer from "./components/data-format-test/Base64ImageRenderer";
 import ObjectURLImageRenderer from "./components/data-format-test/ObjectURLImageRenderer";
+import OffscreenCanvasBase64Renderer from "./components/data-render-test/OffscreenCanvasBase64Renderer";
+import OffscreenCanvasBinaryRenderer from "./components/data-render-test/OffscreenCanvasBinaryRenderer";
 import { useState } from "react";
 import PerformanceStats from "./components/ui/PerformanceStats";
 
-type ComparisonType = "base64-direct" | "base64-objecturl" | "binary-objecturl";
+type ComparisonType =
+  | "base64-direct"
+  | "base64-objecturl"
+  | "binary-objecturl"
+  | "base64-offscreen"
+  | "binary-offscreen";
 
 interface ComparisonConfig {
   type: ComparisonType;
@@ -41,13 +48,26 @@ function App() {
       color: "#52c41a",
       description: "Binary 데이터를 ObjectURL로 변환 후 IMG 태그에 사용",
     },
+    {
+      type: "base64-offscreen",
+      label: "Base64 → OffscreenCanvas",
+      color: "#fa8c16",
+      description: "Base64 데이터를 OffscreenCanvas WebWorker로 렌더링",
+    },
+    {
+      type: "binary-offscreen",
+      label: "Binary → OffscreenCanvas",
+      color: "#eb2f96",
+      description: "Binary 데이터를 OffscreenCanvas WebWorker로 렌더링",
+    },
   ];
 
   // For comparison mode, track which configurations are enabled
   const [enabledConfigs, setEnabledConfigs] = useState<ComparisonConfig[]>([
     availableConfigs[0], // Base64 직접 사용
-    availableConfigs[1], // Base64 → ObjectURL
     availableConfigs[2], // Binary → ObjectURL
+    availableConfigs[3], // Base64 → OffscreenCanvas
+    availableConfigs[4], // Binary → OffscreenCanvas
   ]);
 
   const [base64DirectLatencies, setBase64DirectLatencies] = useState<number[]>(
@@ -59,6 +79,12 @@ function App() {
   const [binaryObjectUrlLatencies, setBinaryObjectUrlLatencies] = useState<
     number[]
   >([]);
+  const [base64OffscreenLatencies, setBase64OffscreenLatencies] = useState<
+    number[]
+  >([]);
+  const [binaryOffscreenLatencies, setBinaryOffscreenLatencies] = useState<
+    number[]
+  >([]);
   const [base64SizeData, setBase64SizeData] = useState<number[]>([]);
   const [binarySizeData, setBinarySizeData] = useState<number[]>([]);
 
@@ -66,8 +92,8 @@ function App() {
   // Base64 WebSocket - active when needed
   const shouldConnectBase64 =
     (viewMode === "comparison" &&
-      enabledConfigs.some((config) => config.type.startsWith("base64"))) ||
-    (viewMode === "single" && singleType.startsWith("base64"));
+      enabledConfigs.some((config) => config.type.includes("base64"))) ||
+    (viewMode === "single" && singleType.includes("base64"));
   useWebSocketReceiverBase64(
     shouldConnectBase64 ? import.meta.env.VITE_WS_URL_BASE64 : null
   );
@@ -75,8 +101,8 @@ function App() {
   // Binary WebSocket - active when needed
   const shouldConnectBinary =
     (viewMode === "comparison" &&
-      enabledConfigs.some((config) => config.type === "binary-objecturl")) ||
-    (viewMode === "single" && singleType === "binary-objecturl");
+      enabledConfigs.some((config) => config.type.includes("binary"))) ||
+    (viewMode === "single" && singleType.includes("binary"));
   useWebSocketReceiverBinary(
     shouldConnectBinary ? import.meta.env.VITE_WS_URL_BINARY : null
   );
@@ -113,6 +139,20 @@ function App() {
         return (
           <BinaryImageRenderer
             onLatencyUpdate={setBinaryObjectUrlLatencies}
+            onImageSizeUpdate={setBinarySizeData}
+          />
+        );
+      case "base64-offscreen":
+        return (
+          <OffscreenCanvasBase64Renderer
+            onLatencyUpdate={setBase64OffscreenLatencies}
+            onImageSizeUpdate={setBase64SizeData}
+          />
+        );
+      case "binary-offscreen":
+        return (
+          <OffscreenCanvasBinaryRenderer
+            onLatencyUpdate={setBinaryOffscreenLatencies}
             onImageSizeUpdate={setBinarySizeData}
           />
         );
@@ -321,21 +361,39 @@ function App() {
                 ? binaryObjectUrlLatencies
                 : []
             }
+            base64OffscreenLatencies={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "base64-offscreen"
+                )) ||
+              (viewMode === "single" && singleType === "base64-offscreen")
+                ? base64OffscreenLatencies
+                : []
+            }
+            binaryOffscreenLatencies={
+              (viewMode === "comparison" &&
+                enabledConfigs.some(
+                  (config) => config.type === "binary-offscreen"
+                )) ||
+              (viewMode === "single" && singleType === "binary-offscreen")
+                ? binaryOffscreenLatencies
+                : []
+            }
             base64Sizes={
               (viewMode === "comparison" &&
                 enabledConfigs.some((config) =>
-                  config.type.startsWith("base64")
+                  config.type.includes("base64")
                 )) ||
-              (viewMode === "single" && singleType.startsWith("base64"))
+              (viewMode === "single" && singleType.includes("base64"))
                 ? base64SizeData
                 : []
             }
             binarySizes={
               (viewMode === "comparison" &&
-                enabledConfigs.some(
-                  (config) => config.type === "binary-objecturl"
+                enabledConfigs.some((config) =>
+                  config.type.includes("binary")
                 )) ||
-              (viewMode === "single" && singleType === "binary-objecturl")
+              (viewMode === "single" && singleType.includes("binary"))
                 ? binarySizeData
                 : []
             }

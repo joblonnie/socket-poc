@@ -5,6 +5,8 @@ interface LatencyChartProps {
   base64DirectLatencies: number[];
   base64ObjectUrlLatencies: number[];
   binaryObjectUrlLatencies: number[];
+  base64OffscreenLatencies: number[];
+  binaryOffscreenLatencies: number[];
   maxDataPoints?: number;
 }
 
@@ -12,6 +14,8 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
   base64DirectLatencies,
   base64ObjectUrlLatencies,
   binaryObjectUrlLatencies,
+  base64OffscreenLatencies,
+  binaryOffscreenLatencies,
   maxDataPoints = 50,
 }) => {
   const chartRef = useRef<HTMLDivElement>(null);
@@ -35,12 +39,16 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
     const base64Direct = getRecentData(base64DirectLatencies);
     const base64ObjectUrl = getRecentData(base64ObjectUrlLatencies);
     const binaryObjectUrl = getRecentData(binaryObjectUrlLatencies);
+    const base64Offscreen = getRecentData(base64OffscreenLatencies);
+    const binaryOffscreen = getRecentData(binaryOffscreenLatencies);
 
     // 가장 긴 배열의 길이를 기준으로 x축 생성
     const maxLength = Math.max(
       base64Direct.length,
       base64ObjectUrl.length,
-      binaryObjectUrl.length
+      binaryObjectUrl.length,
+      base64Offscreen.length,
+      binaryOffscreen.length
     );
 
     const xAxisData = Array.from({ length: maxLength }, (_, i) => i + 1);
@@ -69,7 +77,13 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
         },
       },
       legend: {
-        data: ["Base64 직접", "Base64→ObjectURL", "Binary→ObjectURL"],
+        data: [
+          "Base64 직접",
+          "Base64→ObjectURL",
+          "Binary→ObjectURL",
+          "Base64→OffscreenCanvas",
+          "Binary→OffscreenCanvas",
+        ],
         bottom: 0,
         textStyle: {
           fontSize: 10,
@@ -162,6 +176,36 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
           smooth: true,
           connectNulls: false,
         },
+        {
+          name: "Base64→OffscreenCanvas",
+          type: "line",
+          data: base64Offscreen,
+          itemStyle: {
+            color: "#fa8c16",
+          },
+          lineStyle: {
+            width: 2,
+          },
+          symbol: "circle",
+          symbolSize: 4,
+          smooth: true,
+          connectNulls: false,
+        },
+        {
+          name: "Binary→OffscreenCanvas",
+          type: "line",
+          data: binaryOffscreen,
+          itemStyle: {
+            color: "#eb2f96",
+          },
+          lineStyle: {
+            width: 2,
+          },
+          symbol: "circle",
+          symbolSize: 4,
+          smooth: true,
+          connectNulls: false,
+        },
       ],
       animation: true,
       animationDuration: 300,
@@ -184,6 +228,8 @@ const LatencyChart: React.FC<LatencyChartProps> = ({
     base64DirectLatencies,
     base64ObjectUrlLatencies,
     binaryObjectUrlLatencies,
+    base64OffscreenLatencies,
+    binaryOffscreenLatencies,
     maxDataPoints,
   ]);
 
